@@ -1,0 +1,18 @@
+version: "3"
+services:
+    webapp:
+        build: .
+        ports:
+            - "8000:80"
+            - "44300:443"
+        depends_on:
+            - mssql
+        container_name: emailverificator
+    mssql:
+        image: "mcr.microsoft.com/mssql/server"
+        ports:
+            - "1433:1433"
+        environment:
+            SA_PASSWORD: "Pass@word"
+            ACCEPT_EULA: "Y"
+        container_name: mssql

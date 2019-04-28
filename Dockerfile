@@ -6,7 +6,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
 WORKDIR /src
 COPY ["EmailVerificationService.csproj", ""]
-RUN dotnet restore "/EmailVerificationService.csproj"
+RUN dotnet restore "EmailVerificationService.csproj"
 COPY . .
 WORKDIR "/src/"
 RUN dotnet build "EmailVerificationService.csproj" -c Release -o /app
