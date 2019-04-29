@@ -1,13 +1,15 @@
-version: "3"
+version: "3.4"
 services:
-    webapp:
-        build: .
+    emailverificationservice:
+        build:
+            context: .
+            dockerfile: Dockerfile
         ports:
             - "8000:80"
             - "44300:443"
         depends_on:
             - mssql
-        container_name: emailverificator
+        container_name: emailverificationservice
     mssql:
         image: "mcr.microsoft.com/mssql/server"
         ports:
