@@ -18,3 +18,9 @@ docker build -t aspnetapp .
 ```
 docker run -d -p 8080:80 --name myapp aspnetapp
 ```
+
+Build and run webapp and ms sql in containers with docker-compose
+```
+docker-compose build
+docker-compse up
+```

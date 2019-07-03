@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
+using SendGrid.Helpers.Mail;
 
 namespace EmailVerificationService.Controllers
 {
@@ -54,6 +55,8 @@ namespace EmailVerificationService.Controllers
             if (existingEntry != null)
             {
                 code = await userManager.GenerateEmailConfirmationTokenAsync(existingEntry);
+                existingEntry.EmailConfirmed = false;
+                await userManager.UpdateAsync(existingEntry);
             }
             else
             {
@@ -96,7 +99,7 @@ namespace EmailVerificationService.Controllers
             var result = await userManager.ConfirmEmailAsync(entry, code);
             Debug.WriteLine($"id = {email}, code={code}");
 
-            return new StatusCodeResult((int)HttpStatusCode.OK);
+            return Content($"Email {email} validated");
         }
 
         // DELETE api/values/5

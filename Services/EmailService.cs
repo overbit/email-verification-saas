@@ -1,61 +1,34 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Net;
-using System.Net.Mail;
 using System.Threading.Tasks;
 using EmailVerificationService.ConfigBinders;
 using EmailVerificationService.Models;
-using Microsoft.Extensions.Configuration;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace EmailVerificationService.Services
 {
     public class EmailService : IIdentityMessageService
     {
-        private readonly IConfiguration config;
-        private EmailSettings emailSettings;
+        private EmailConfigurationSettings EmailConfigurationSettings { get; }
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(EmailConfigurationSettings emailConfigurationSettings)
         {
-            config = configuration;
-            config.GetSection("Mail").Bind(emailSettings);
-            if (string.IsNullOrEmpty(emailSettings.Username) || string.IsNullOrEmpty(emailSettings.Password))
-            {
-                throw new Exception("You must set the Mail.Username and Mail.Password in the appsettings.json");
-            }
+            EmailConfigurationSettings = emailConfigurationSettings;
         }
 
         public async Task SendAsync(IdentityMessage message)
         {
-            var client = new SmtpClient(emailSettings.SmtpClient)
+            var apiKey = EmailConfigurationSettings.SendGridKey;
+            var client = new SendGridClient(apiKey);
+            var from = new EmailAddress(EmailConfigurationSettings.FromAccount, "Abcam validator");
+            var to = new EmailAddress(message.Destination);
+            var msg = MailHelper.CreateSingleEmail(from, to, message.Subject, message.Body, message.Body);
+            var response = await client.SendEmailAsync(msg);
+            if (response.StatusCode != HttpStatusCode.Accepted)
             {
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(emailSettings.Username, emailSettings.Password)
-            };
-
-            MailMessage mailMessage = new MailMessage();
-            mailMessage.From = new MailAddress(emailSettings.FromAccount);
-            mailMessage.To.Add(message.Destination);
-            mailMessage.Body = message.Body;
-            mailMessage.Subject = message.Subject;
-
-            client.SendAsync(mailMessage, message.Destination);
-        }
-
-        private void SmtpClientSendCompleted(object sender, AsyncCompletedEventArgs e)
-        {
-            var smtpClient = (SmtpClient)sender;
-            var userAsyncState = (string)e.UserState;
-            smtpClient.SendCompleted -= SmtpClientSendCompleted;
-
-//            if (e.Error != null)
-//            {
-//                Log.error(
-//                    e.Error,
-//                    string.Format("Message sending for \"{0}\" failed.", userAsyncState)
-//                );
-//            }
-
-            // Cleaning up resources
+                throw new Exception($"Error: {response.StatusCode} - Description: ${response.Body.ReadAsStringAsync().Result}");
+            }
         }
     }
 }

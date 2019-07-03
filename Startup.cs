@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Security.Policy;
+using EmailVerificationService.ConfigBinders;
 using EmailVerificationService.Data;
 using EmailVerificationService.Models;
 using EmailVerificationService.Services;
@@ -34,16 +35,21 @@ namespace EmailVerificationService
                     config.SignIn.RequireConfirmedEmail = true;
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+            
+            var emailConfig = new EmailConfigurationSettings();
+            Configuration.Bind("Email", emailConfig);
+            services.AddSingleton(emailConfig);
 
-            // Custom Services (DI)
-            if (Debugger.IsAttached)
-            {
-                services.AddSingleton<IIdentityMessageService, ConsoleMessageService>();
-            }
-            else
-            {
-                services.AddSingleton<IIdentityMessageService,EmailService>();
-            }
+            //
+            //            // Custom Services (DI)
+            //            if (Debugger.IsAttached)
+            //            {
+            //                services.AddSingleton<IIdentityMessageService, ConsoleMessageService>();
+            //            }
+            //            else
+            //            {
+
+            services.AddSingleton<IIdentityMessageService,EmailService>();
 
             services.Configure<DataProtectionTokenProviderOptions>(o =>
                 o.TokenLifespan = TimeSpan.FromHours(1));
